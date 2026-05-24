@@ -54,16 +54,12 @@ export default function HomePage() {
     loadData();
   }, []);
 
-  const loadMoreSeries = useCallback(async (slug: string, page: number) => {
+  const loadSeriesPage = useCallback(async (slug: string, page: number) => {
     try {
       const data = slug
         ? await moviesApi.getByType('series', slug, page)
         : await moviesApi.getSeries(page);
-      if (page === 1) {
-        setSeries(data.items || []);
-      } else {
-        setSeries((prev) => [...prev, ...(data.items || [])]);
-      }
+      setSeries(data.items || []);
       setSeriesAll(data);
     } catch {}
   }, []);
@@ -71,8 +67,8 @@ export default function HomePage() {
   const handleSeriesFilterChange = useCallback((slug: string) => {
     setSeriesFilter(slug);
     setSeriesPage(1);
-    loadMoreSeries(slug, 1);
-  }, [loadMoreSeries]);
+    loadSeriesPage(slug, 1);
+  }, [loadSeriesPage]);
 
   return (
     <>
@@ -144,19 +140,32 @@ export default function HomePage() {
           </div>
         )}
 
-        {seriesAll?.pagination && seriesPage < seriesAll.pagination.totalPages && (
-          <div style={{ textAlign: 'center', marginTop: 24 }}>
-            <button onClick={() => {
-              const nextPage = seriesPage + 1;
-              setSeriesPage(nextPage);
-              loadMoreSeries(seriesFilter, nextPage);
-            }} style={{
-              padding: '12px 40px', borderRadius: 8, border: 'none',
-              background: 'var(--accent)', color: 'white', fontSize: 14,
-              fontWeight: 700, cursor: 'pointer', transition: 'opacity 0.2s',
-            }}>
-              Xem thêm
-            </button>
+        {seriesAll?.pagination && seriesAll.pagination.totalPages > 1 && (
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 6, marginTop: 24, marginBottom: 8 }}>
+            {seriesPage > 1 && (
+              <button onClick={() => { const p = seriesPage - 1; setSeriesPage(p); loadSeriesPage(seriesFilter, p); }}
+                style={{ padding: '8px 12px', borderRadius: 6, border: 'none', background: 'rgba(255,255,255,0.06)', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: 13 }}>Trước</button>
+            )}
+            {Array.from({ length: Math.min(seriesAll.pagination.totalPages, 7) }, (_, i) => {
+              const total = seriesAll.pagination.totalPages;
+              let p: number;
+              if (total <= 7) p = i + 1;
+              else if (seriesPage <= 4) p = i + 1;
+              else if (seriesPage >= total - 3) p = total - 6 + i;
+              else p = seriesPage - 3 + i;
+              return (
+                <button key={p} onClick={() => { setSeriesPage(p); loadSeriesPage(seriesFilter, p); }}
+                  style={{
+                    padding: '8px 12px', borderRadius: 6, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600,
+                    background: p === seriesPage ? 'var(--accent)' : 'rgba(255,255,255,0.06)',
+                    color: p === seriesPage ? 'white' : 'var(--text-secondary)',
+                  }}>{p}</button>
+              );
+            })}
+            {seriesPage < seriesAll.pagination.totalPages && (
+              <button onClick={() => { const p = seriesPage + 1; setSeriesPage(p); loadSeriesPage(seriesFilter, p); }}
+                style={{ padding: '8px 12px', borderRadius: 6, border: 'none', background: 'rgba(255,255,255,0.06)', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: 13 }}>Sau</button>
+            )}
           </div>
         )}
       </section>
