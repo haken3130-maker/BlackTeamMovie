@@ -456,12 +456,13 @@ export default function MovieDetailPage() {
         </div>
 
         {/* Bottom controls bar */}
-        <div style={{
+        <div id="player-controls" style={{
           position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 10, padding: '8px 12px',
           opacity: showControls ? 1 : 0, transition: 'opacity 0.3s',
           pointerEvents: showControls ? 'auto' : 'none',
-          display: 'flex', alignItems: 'center', gap: 6,
+          display: 'flex', alignItems: 'center', gap: 6, overflowX: 'auto',
         }}>
+          <style>{'#player-controls::-webkit-scrollbar{display:none}#player-controls{scrollbar-width:none}'}</style>
           {/* Play/Pause */}
           <button onClick={togglePlay} style={ctrlBtnStyle}>
             {isPlaying ? <Pause size={20} fill="white" /> : <Play size={20} fill="white" />}
@@ -770,7 +771,7 @@ const ctrlBtnStyle: React.CSSProperties = {
   background: 'none', border: 'none', color: 'white', cursor: 'pointer',
   display: 'flex', alignItems: 'center', justifyContent: 'center',
   padding: '6px', borderRadius: 4, position: 'relative',
-  fontSize: 11, minWidth: 32, minHeight: 32,
+  fontSize: 11, minWidth: 32, minHeight: 32, flexShrink: 0,
 };
 
 function MenuPanel({ children, onClose, side = 'left' }: { children: React.ReactNode; onClose: () => void; side?: string }) {
