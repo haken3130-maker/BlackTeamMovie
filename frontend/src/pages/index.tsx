@@ -1,0 +1,166 @@
+import { useEffect, useState, useCallback } from 'react';
+import Link from 'next/link';
+import { TrendingUp, Film, Tv, Layers } from 'lucide-react';
+import Banner from '@/components/Banner';
+import MovieSlider from '@/components/MovieSlider';
+import ViewHistory from '@/components/ViewHistory';
+import CategoryFilter from '@/components/CategoryFilter';
+import MovieCard from '@/components/MovieCard';
+import { moviesApi } from '@/services/api';
+import { Movie, PaginatedResponse } from '@/types/movie';
+
+export default function HomePage() {
+  const [featured, setFeatured] = useState<Movie[]>([]);
+  const [series, setSeries] = useState<Movie[]>([]);
+  const [singles, setSingles] = useState<Movie[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [seriesFilter, setSeriesFilter] = useState('');
+  const [seriesPage, setSeriesPage] = useState(1);
+  const [seriesAll, setSeriesAll] = useState<PaginatedResponse | null>(null);
+  const [videoMap, setVideoMap] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const [featuredData, seriesData, singlesData] = await Promise.all([
+          moviesApi.getFeatured(),
+          moviesApi.getSeries(1),
+          moviesApi.getSingles(1),
+        ]);
+        setFeatured(featuredData);
+        setSeries(seriesData.items || []);
+        setSeriesAll(seriesData);
+        setSingles(singlesData.items || []);
+
+        const detailPromises = featuredData.map(async (m: Movie) => {
+          try {
+            const detail = await moviesApi.getDetail(m.slug);
+            const firstEp = detail.episodes?.[0]?.server_data?.[0];
+            const url = firstEp?.link_m3u8 || firstEp?.link_embed;
+            if (url) return { slug: m.slug, url };
+          } catch {}
+          return null;
+        });
+        const results = await Promise.all(detailPromises);
+        const map: Record<string, string> = {};
+        results.forEach((r) => { if (r) map[r.slug] = r.url; });
+        setVideoMap(map);
+      } catch (err) {
+        console.error('Failed to load homepage data:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadData();
+  }, []);
+
+  const loadMoreSeries = useCallback(async (slug: string, page: number) => {
+    try {
+      const data = slug
+        ? await moviesApi.getByType('series', slug, page)
+        : await moviesApi.getSeries(page);
+      if (page === 1) {
+        setSeries(data.items || []);
+      } else {
+        setSeries((prev) => [...prev, ...(data.items || [])]);
+      }
+      setSeriesAll(data);
+    } catch {}
+  }, []);
+
+  const handleSeriesFilterChange = useCallback((slug: string) => {
+    setSeriesFilter(slug);
+    setSeriesPage(1);
+    loadMoreSeries(slug, 1);
+  }, [loadMoreSeries]);
+
+  return (
+    <>
+      <Banner movies={featured} loading={loading} videoMap={videoMap} />
+
+      <div style={{ paddingTop: 56 }}>
+      <ViewHistory />
+
+      <div className="container" style={{ display: 'flex', gap: 16, marginTop: 24, flexWrap: 'wrap' }}>
+        {[
+          { icon: <Tv size={20} />, label: 'Phim bộ', href: '/danh-sach?type=series', color: '#e50914' },
+          { icon: <Film size={20} />, label: 'Phim lẻ', href: '/danh-sach?type=single', color: '#ff6b6b' },
+          { icon: <TrendingUp size={20} />, label: 'Phim hot', href: '/danh-sach?sort_field=view', color: '#ffd93d' },
+          { icon: <Layers size={20} />, label: 'Tất cả', href: '/danh-sach', color: '#6c5ce7' },
+        ].map((item) => (
+          <Link key={item.label} href={item.href} style={{
+            display: 'flex', alignItems: 'center', gap: 10,
+            padding: '14px 20px', borderRadius: 12, background: 'var(--bg-card)',
+            flex: 1, minWidth: 150, textDecoration: 'none', color: 'inherit',
+            transition: 'transform 0.2s, box-shadow 0.2s',
+          }}
+            onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = `0 8px 24px ${item.color}22`; }}
+            onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
+          >
+            <div style={{ width: 40, height: 40, borderRadius: 10, background: `${item.color}22`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: item.color }}>
+              {item.icon}
+            </div>
+            <div>
+              <div style={{ fontSize: 15, fontWeight: 700 }}>{item.label}</div>
+              <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Khám phá ngay</div>
+            </div>
+          </Link>
+        ))}
+      </div>
+
+      <MovieSlider
+        title="Phim bộ mới nhất"
+        movies={series}
+        loading={loading}
+        link="/danh-sach?type=series"
+      />
+
+      <MovieSlider
+        title="Phim lẻ mới nhất"
+        movies={singles}
+        loading={loading}
+        link="/danh-sach?type=single"
+      />
+
+      <section className="container">
+        <div className="section-header">
+          <h2 className="section-title" style={{ marginBottom: 0 }}>Phim bộ theo thể loại</h2>
+        </div>
+        <CategoryFilter selected={seriesFilter} onChange={handleSeriesFilterChange} />
+
+        {loading ? (
+          <div className="movie-grid">
+            {Array.from({ length: 12 }).map((_, i) => (
+              <div key={i}>
+                <div className="skeleton" style={{ width: '100%', aspectRatio: '2/3', borderRadius: 10 }} />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="movie-grid">
+            {series.map((movie) => (
+              <MovieCard key={movie._id} movie={movie} />
+            ))}
+          </div>
+        )}
+
+        {seriesAll?.pagination && seriesPage < seriesAll.pagination.totalPages && (
+          <div style={{ textAlign: 'center', marginTop: 24 }}>
+            <button onClick={() => {
+              const nextPage = seriesPage + 1;
+              setSeriesPage(nextPage);
+              loadMoreSeries(seriesFilter, nextPage);
+            }} style={{
+              padding: '12px 40px', borderRadius: 8, border: 'none',
+              background: 'var(--accent)', color: 'white', fontSize: 14,
+              fontWeight: 700, cursor: 'pointer', transition: 'opacity 0.2s',
+            }}>
+              Xem thêm
+            </button>
+          </div>
+        )}
+      </section>
+      </div>
+    </>
+  );
+}
