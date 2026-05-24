@@ -294,15 +294,33 @@ export default function MovieDetailPage() {
 
   const toggleFullscreen = async () => {
     const el = containerRef.current;
+    const video = videoRef.current;
     if (!el) return;
-    if (document.fullscreenElement) {
-      await document.exitFullscreen();
+    if (document.fullscreenElement || (document as any).webkitFullscreenElement) {
+      if (document.exitFullscreen) await document.exitFullscreen();
+      else if ((document as any).webkitExitFullscreen) await (document as any).webkitExitFullscreen();
       setIsFullscreen(false);
     } else {
-      await el.requestFullscreen();
-      setIsFullscreen(true);
+      try {
+        if ((video as any)?.webkitEnterFullscreen) {
+          (video as any).webkitEnterFullscreen();
+        } else {
+          await el.requestFullscreen();
+        }
+        setIsFullscreen(true);
+      } catch {}
     }
   };
+
+  useEffect(() => {
+    const onChange = () => setIsFullscreen(!!(document.fullscreenElement || (document as any).webkitFullscreenElement));
+    document.addEventListener('fullscreenchange', onChange);
+    document.addEventListener('webkitfullscreenchange', onChange);
+    return () => {
+      document.removeEventListener('fullscreenchange', onChange);
+      document.removeEventListener('webkitfullscreenchange', onChange);
+    };
+  }, []);
 
   const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
     const rect = progressRef.current?.getBoundingClientRect();
@@ -356,6 +374,7 @@ export default function MovieDetailPage() {
       }}
         onMouseMove={resetControlsTimer}
         onMouseLeave={() => { if (isPlaying) setShowControls(false); }}
+        onTouchStart={() => { if (!showControls) resetControlsTimer(); }}
       >
         <video ref={videoRef} style={{ width: '100%', height: '100%', display: 'block', objectFit: 'contain' }}
           playsInline onClick={togglePlay} />
