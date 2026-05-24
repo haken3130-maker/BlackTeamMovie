@@ -219,6 +219,32 @@ export default function MovieDetailPage() {
     return () => window.removeEventListener('keydown', handler);
   }, []);
 
+  // Auto fullscreen on device rotation
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    const onOrientationChange = async () => {
+      if (window.matchMedia('(orientation: landscape)').matches) {
+        if (!document.fullscreenElement) {
+          try { await el.requestFullscreen(); setIsFullscreen(true); } catch {}
+        }
+      } else {
+        if (document.fullscreenElement) {
+          try { await document.exitFullscreen(); setIsFullscreen(false); } catch {}
+        }
+      }
+    };
+
+    window.addEventListener('orientationchange', onOrientationChange);
+    screen.orientation?.addEventListener('change', onOrientationChange);
+
+    return () => {
+      window.removeEventListener('orientationchange', onOrientationChange);
+      screen.orientation?.removeEventListener('change', onOrientationChange);
+    };
+  }, []);
+
   const togglePlay = () => {
     const video = videoRef.current;
     if (!video) return;
