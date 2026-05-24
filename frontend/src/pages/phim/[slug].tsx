@@ -561,26 +561,24 @@ export default function MovieDetailPage() {
             {activeMenu === MENU_EPISODES && (
               <div style={{
                 position: 'absolute', bottom: '100%', right: 0, marginBottom: 8,
-                background: '#1a1a1a', borderRadius: 8, minWidth: 320, maxHeight: 400,
-                display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.5)',
+                background: '#1a1a1a', borderRadius: 8, width: 340, maxWidth: 'calc(100vw - 16px)',
+                maxHeight: 400, display: 'flex', flexDirection: 'column', overflow: 'hidden',
+                boxShadow: '0 4px 20px rgba(0,0,0,0.5)',
               }}>
                 <div style={{ padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.1)', fontSize: 14, fontWeight: 700 }}>
                   Danh sách tập
                 </div>
-                <div style={{ overflow: 'auto', flex: 1 }}>
+                <div style={{ overflow: 'auto', flex: 1, padding: 8, display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(48px, 1fr))', gap: 4 }}>
                   {episodes.map((ep, i) => {
                     const isActive = (ep.slug || ep.name) === activeEpisode;
                     return (
-                      <div key={ep.slug || ep.name || i} onClick={() => changeEpisode(ep)} style={{
-                        display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', cursor: 'pointer',
-                        background: isActive ? 'rgba(229,9,20,0.2)' : 'transparent',
-                        borderLeft: isActive ? '3px solid #e50914' : '3px solid transparent',
-                      }}>
-                        <div style={{ flex: 1, fontSize: 13 }}>
-                          <div style={{ fontWeight: isActive ? 700 : 400 }}>Tập {ep.name}</div>
-                        </div>
-                        {isActive && <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#e50914' }} />}
-                      </div>
+                      <button key={ep.slug || ep.name || i} onClick={() => changeEpisode(ep)} style={{
+                        padding: '10px 4px', border: 'none', borderRadius: 6, cursor: 'pointer',
+                        fontSize: 13, fontWeight: 600, textAlign: 'center',
+                        background: isActive ? 'var(--accent)' : 'rgba(255,255,255,0.08)',
+                        color: isActive ? 'white' : 'var(--text-secondary)',
+                        minHeight: 40,
+                      }}>{ep.name}</button>
                     );
                   })}
                 </div>
@@ -664,12 +662,12 @@ export default function MovieDetailPage() {
                 <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 12 }}>Danh sách tập</h3>
 
                 {movie.episodes.length > 1 && (
-                  <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+                  <div style={{ display: 'flex', gap: 8, marginBottom: 12, overflowX: 'auto', flexShrink: 0 }}>
                     {movie.episodes.map((server, idx) => (
                       <button key={idx} onClick={() => { setActiveServer(idx); setActiveEpisode(''); }}
                         style={{
                           padding: '8px 16px', borderRadius: 8, border: 'none',
-                          fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                          fontSize: 13, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
                           background: idx === activeServer ? 'var(--accent)' : 'rgba(255,255,255,0.08)',
                           color: idx === activeServer ? 'white' : 'var(--text-secondary)',
                         }}
@@ -680,15 +678,15 @@ export default function MovieDetailPage() {
 
                 <div className="episode-grid" style={{
                   display: 'grid', gap: 6,
-                  gridTemplateColumns: 'repeat(auto-fill, minmax(56px, 1fr))',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(44px, 1fr))',
                   maxHeight: showAllEpisodes ? 'none' : 240,
                   overflowY: 'auto',
                 }}>
                   {(showAllEpisodes ? episodes : episodes.slice(0, EPISODE_LIMIT)).map((ep, i) => (
                     <button key={ep.slug || ep.name || i} onClick={() => setActiveEpisode(ep.slug || ep.name)}
                       style={{
-                        padding: '8px 4px', borderRadius: 6, border: 'none',
-                        fontSize: 13, fontWeight: 600, cursor: 'pointer', textAlign: 'center',
+                        padding: '10px 2px', borderRadius: 6, border: 'none',
+                        fontSize: 13, fontWeight: 600, cursor: 'pointer', textAlign: 'center', minHeight: 40,
                         background: (activeEpisode === ep.slug || activeEpisode === ep.name)
                           ? 'var(--accent)' : 'rgba(255,255,255,0.06)',
                         color: (activeEpisode === ep.slug || activeEpisode === ep.name)
@@ -701,7 +699,7 @@ export default function MovieDetailPage() {
                 {episodes.length > EPISODE_LIMIT && (
                   <button onClick={() => setShowAllEpisodes(v => !v)}
                     style={{
-                      width: '100%', marginTop: 8, padding: '8px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.1)',
+                      width: '100%', marginTop: 8, padding: '10px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.1)',
                       background: 'transparent', color: 'var(--text-secondary)', fontSize: 13, cursor: 'pointer',
                     }}
                   >{showAllEpisodes ? 'Thu gọn' : `Xem thêm (${episodes.length - EPISODE_LIMIT} tập)`}</button>
