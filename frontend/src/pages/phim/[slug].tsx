@@ -360,8 +360,6 @@ export default function MovieDetailPage() {
   const progressPct = duration ? (currentTime / duration) * 100 : 0;
   const bufferedPct = duration ? (bufferedEnd / duration) * 100 : 0;
 
-  const isVertical = activeMenu === MENU_EPISODES;
-
   return (
     <>
       <div className="video-wrapper" style={{
@@ -456,13 +454,15 @@ export default function MovieDetailPage() {
         </div>
 
         {/* Bottom controls bar */}
-        <div id="player-controls" style={{
-          position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 10, padding: '8px 12px',
+        <div style={{
+          position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 10,
           opacity: showControls ? 1 : 0, transition: 'opacity 0.3s',
           pointerEvents: showControls ? 'auto' : 'none',
-          display: 'flex', alignItems: 'center', gap: 6, overflowX: 'auto',
         }}>
-          <style>{'#player-controls::-webkit-scrollbar{display:none}#player-controls{scrollbar-width:none}'}</style>
+          <style>{'.ctrl-scroll::-webkit-scrollbar{display:none}.ctrl-scroll{scrollbar-width:none}'}</style>
+          <div className="ctrl-scroll" style={{
+            display: 'flex', alignItems: 'center', gap: 6, overflowX: 'auto', padding: '8px 12px',
+          }}>
           {/* Play/Pause */}
           <button onClick={togglePlay} style={ctrlBtnStyle}>
             {isPlaying ? <Pause size={20} fill="white" /> : <Play size={20} fill="white" />}
@@ -558,32 +558,6 @@ export default function MovieDetailPage() {
             <button onClick={() => handleMenuToggle(MENU_EPISODES)} style={ctrlBtnStyle} title="Danh sách tập">
               <List size={18} />
             </button>
-            {activeMenu === MENU_EPISODES && (
-              <div style={{
-                position: 'absolute', bottom: '100%', right: 0, marginBottom: 8,
-                background: '#1a1a1a', borderRadius: 8, width: 340, maxWidth: 'calc(100vw - 16px)',
-                maxHeight: 400, display: 'flex', flexDirection: 'column', overflow: 'hidden',
-                boxShadow: '0 4px 20px rgba(0,0,0,0.5)',
-              }}>
-                <div style={{ padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.1)', fontSize: 14, fontWeight: 700 }}>
-                  Danh sách tập
-                </div>
-                <div style={{ overflow: 'auto', flex: 1, padding: 8, display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(48px, 1fr))', gap: 4 }}>
-                  {episodes.map((ep, i) => {
-                    const isActive = (ep.slug || ep.name) === activeEpisode;
-                    return (
-                      <button key={ep.slug || ep.name || i} onClick={() => changeEpisode(ep)} style={{
-                        padding: '10px 4px', border: 'none', borderRadius: 6, cursor: 'pointer',
-                        fontSize: 13, fontWeight: 600, textAlign: 'center',
-                        background: isActive ? 'var(--accent)' : 'rgba(255,255,255,0.08)',
-                        color: isActive ? 'white' : 'var(--text-secondary)',
-                        minHeight: 40,
-                      }}>{ep.name}</button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
           </div>
 
           {/* Audio & Subtitle */}
@@ -591,22 +565,6 @@ export default function MovieDetailPage() {
             <button onClick={() => handleMenuToggle(MENU_AUDIO_SUB)} style={ctrlBtnStyle} title="Âm thanh & Phụ đề">
               <MessageCircle size={18} />
             </button>
-            {activeMenu === MENU_AUDIO_SUB && (
-              <MenuPanel onClose={() => setActiveMenu(null)} side="right">
-                <div style={{ display: 'flex', gap: 16 }}>
-                  <div>
-                    <MenuTitle>Phụ đề</MenuTitle>
-                    <MenuItem active>Tiếng Việt</MenuItem>
-                    <MenuItem onClick={() => setActiveMenu(null)}>Tắt</MenuItem>
-                  </div>
-                  <div>
-                    <MenuTitle>Âm thanh</MenuTitle>
-                    <MenuItem active>Lồng Tiếng</MenuItem>
-                    <MenuItem onClick={() => setActiveMenu(null)}>Tiếng Gốc</MenuItem>
-                  </div>
-                </div>
-              </MenuPanel>
-            )}
           </div>
 
           {/* Fullscreen */}
@@ -614,6 +572,128 @@ export default function MovieDetailPage() {
             {isFullscreen ? <Minimize size={18} /> : <Maximize size={18} />}
           </button>
         </div>
+
+        {/* Episode list overlay */}
+        {activeMenu === MENU_EPISODES && (
+          <div onClick={() => setActiveMenu(null)} style={{
+            position: 'fixed', inset: 0, zIndex: 100, display: 'flex', alignItems: 'flex-end',
+            justifyContent: 'center', background: 'rgba(0,0,0,0.6)',
+          }}>
+            <div onClick={(e) => e.stopPropagation()} style={{
+              background: '#1a1a1a', borderRadius: '12px 12px 0 0', width: '100%', maxWidth: 600,
+              maxHeight: '70vh', display: 'flex', flexDirection: 'column', overflow: 'hidden',
+            }}>
+              <div style={{ padding: '14px 16px', borderBottom: '1px solid rgba(255,255,255,0.1)', fontSize: 15, fontWeight: 700, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                Danh sách tập
+                <button onClick={() => setActiveMenu(null)} style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer', fontSize: 18 }}>✕</button>
+              </div>
+              <div style={{ overflow: 'auto', flex: 1, padding: 10, display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(48px, 1fr))', gap: 6 }}>
+                {episodes.map((ep, i) => {
+                  const isActive = (ep.slug || ep.name) === activeEpisode;
+                  return (
+                    <button key={ep.slug || ep.name || i} onClick={() => changeEpisode(ep)} style={{
+                      padding: '12px 4px', border: 'none', borderRadius: 8, cursor: 'pointer',
+                      fontSize: 13, fontWeight: 600, textAlign: 'center', minHeight: 44,
+                      background: isActive ? 'var(--accent)' : 'rgba(255,255,255,0.08)',
+                      color: isActive ? 'white' : 'var(--text-secondary)',
+                    }}>{ep.name}</button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Speed overlay */}
+        {activeMenu === MENU_SPEED && (
+          <div onClick={() => setActiveMenu(null)} style={{
+            position: 'fixed', inset: 0, zIndex: 100, display: 'flex', alignItems: 'flex-end',
+            justifyContent: 'center', background: 'rgba(0,0,0,0.6)',
+          }}>
+            <div onClick={(e) => e.stopPropagation()} style={{
+              background: '#1a1a1a', borderRadius: '12px 12px 0 0', width: '100%', maxWidth: 400,
+              padding: '16px 0',
+            }}>
+              <div style={{ padding: '0 16px 12px', fontSize: 15, fontWeight: 700, color: 'rgba(255,255,255,0.6)' }}>Tốc độ phát</div>
+              {SPEEDS.map((s) => (
+                <div key={s} onClick={() => handleRateChange(s)} style={{
+                  padding: '12px 16px', fontSize: 14, cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', gap: 10,
+                  background: playbackRate === s ? 'rgba(229,9,20,0.15)' : 'transparent',
+                  color: playbackRate === s ? '#e50914' : 'white',
+                  fontWeight: playbackRate === s ? 700 : 400,
+                }}>
+                  {playbackRate === s && <span style={{ color: '#e50914' }}>✓</span>}
+                  {playbackRate !== s && <span style={{ width: 20 }} />}
+                  {s === 1 ? '1x (Bình thường)' : `${s}x`}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Quality overlay */}
+        {activeMenu === MENU_QUALITY && qualities.length > 0 && (
+          <div onClick={() => setActiveMenu(null)} style={{
+            position: 'fixed', inset: 0, zIndex: 100, display: 'flex', alignItems: 'flex-end',
+            justifyContent: 'center', background: 'rgba(0,0,0,0.6)',
+          }}>
+            <div onClick={(e) => e.stopPropagation()} style={{
+              background: '#1a1a1a', borderRadius: '12px 12px 0 0', width: '100%', maxWidth: 400,
+              padding: '16px 0',
+            }}>
+              <div style={{ padding: '0 16px 12px', fontSize: 15, fontWeight: 700, color: 'rgba(255,255,255,0.6)' }}>Chất lượng</div>
+              {qualities.map((q) => (
+                <div key={q.level} onClick={() => handleQualityChange(q.level)} style={{
+                  padding: '12px 16px', fontSize: 14, cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', gap: 10,
+                  background: currentQuality === q.level ? 'rgba(229,9,20,0.15)' : 'transparent',
+                  color: currentQuality === q.level ? '#e50914' : 'white',
+                  fontWeight: currentQuality === q.level ? 700 : 400,
+                }}>
+                  {currentQuality === q.level && <span style={{ color: '#e50914' }}>✓</span>}
+                  {currentQuality !== q.level && <span style={{ width: 20 }} />}
+                  {q.label}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Audio & Sub overlay */}
+        {activeMenu === MENU_AUDIO_SUB && (
+          <div onClick={() => setActiveMenu(null)} style={{
+            position: 'fixed', inset: 0, zIndex: 100, display: 'flex', alignItems: 'flex-end',
+            justifyContent: 'center', background: 'rgba(0,0,0,0.6)',
+          }}>
+            <div onClick={(e) => e.stopPropagation()} style={{
+              background: '#1a1a1a', borderRadius: '12px 12px 0 0', width: '100%', maxWidth: 400,
+              padding: '16px 0',
+            }}>
+              <div style={{ display: 'flex', gap: 24, padding: '0 16px' }}>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.6)', marginBottom: 8 }}>Phụ đề</div>
+                  <div style={{ padding: '8px 0', fontSize: 14, fontWeight: 700, color: '#e50914', display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ color: '#e50914' }}>✓</span> Tiếng Việt
+                  </div>
+                  <div style={{ padding: '8px 0', fontSize: 14, cursor: 'pointer' }} onClick={() => setActiveMenu(null)}>
+                    <span style={{ width: 20, display: 'inline-block' }} /> Tắt
+                  </div>
+                </div>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.6)', marginBottom: 8 }}>Âm thanh</div>
+                  <div style={{ padding: '8px 0', fontSize: 14, fontWeight: 700, color: '#e50914', display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ color: '#e50914' }}>✓</span> Lồng Tiếng
+                  </div>
+                  <div style={{ padding: '8px 0', fontSize: 14, cursor: 'pointer' }} onClick={() => setActiveMenu(null)}>
+                    <span style={{ width: 20, display: 'inline-block' }} /> Tiếng Gốc
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
       </div>
       </div>
 
