@@ -146,22 +146,28 @@ export default function HomePage() {
               <button onClick={() => { const p = seriesPage - 1; setSeriesPage(p); loadSeriesPage(seriesFilter, p); }}
                 style={{ padding: '8px 12px', borderRadius: 6, border: 'none', background: 'rgba(255,255,255,0.06)', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: 13 }}>Trước</button>
             )}
-            {Array.from({ length: Math.min(seriesAll.pagination.totalPages, 7) }, (_, i) => {
+            {(() => {
               const total = seriesAll.pagination.totalPages;
-              let p: number;
-              if (total <= 7) p = i + 1;
-              else if (seriesPage <= 4) p = i + 1;
-              else if (seriesPage >= total - 3) p = total - 6 + i;
-              else p = seriesPage - 3 + i;
-              return (
-                <button key={p} onClick={() => { setSeriesPage(p); loadSeriesPage(seriesFilter, p); }}
-                  style={{
-                    padding: '8px 12px', borderRadius: 6, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600,
-                    background: p === seriesPage ? 'var(--accent)' : 'rgba(255,255,255,0.06)',
-                    color: p === seriesPage ? 'white' : 'var(--text-secondary)',
-                  }}>{p}</button>
+              const pages: (number | string)[] = [];
+              const range = 2;
+              const start = Math.max(2, seriesPage - range);
+              const end = Math.min(total - 1, seriesPage + range);
+              pages.push(1);
+              if (start > 2) pages.push('...');
+              for (let i = start; i <= end; i++) pages.push(i);
+              if (end < total - 1) pages.push('...');
+              if (total > 1) pages.push(total);
+              return pages.map((p) =>
+                p === '...'
+                  ? <span key={`e${pages.indexOf(p)}`} style={{ padding: '8px 4px', color: 'var(--text-muted)', fontSize: 13 }}>...</span>
+                  : <button key={p} onClick={() => { setSeriesPage(p as number); loadSeriesPage(seriesFilter, p as number); }}
+                      style={{
+                        padding: '8px 12px', borderRadius: 6, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600,
+                        background: p === seriesPage ? 'var(--accent)' : 'rgba(255,255,255,0.06)',
+                        color: p === seriesPage ? 'white' : 'var(--text-secondary)',
+                      }}>{p}</button>
               );
-            })}
+            })()}
             {seriesPage < seriesAll.pagination.totalPages && (
               <button onClick={() => { const p = seriesPage + 1; setSeriesPage(p); loadSeriesPage(seriesFilter, p); }}
                 style={{ padding: '8px 12px', borderRadius: 6, border: 'none', background: 'rgba(255,255,255,0.06)', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: 13 }}>Sau</button>
