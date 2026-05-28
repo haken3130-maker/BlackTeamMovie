@@ -7,7 +7,7 @@ import {
   Settings, List, StepForward, MessageCircle, ChevronDown,
 } from 'lucide-react';
 import { moviesApi } from '@/services/api';
-import { MovieDetail, ViewHistoryItem } from '@/types/movie';
+import { Movie, MovieDetail, ViewHistoryItem } from '@/types/movie';
 import MovieSlider from '@/components/MovieSlider';
 import Hls from 'hls.js';
 import { decryptLink } from '@/utils/crypto';
@@ -90,7 +90,7 @@ export default function MovieDetailPage() {
     try {
       const cat = data.category?.[0]?.slug;
       const result = await moviesApi.getByType(data.type, cat, 1);
-      setRelatedMovies((result.items || []).filter((m) => m.slug !== data.slug).slice(0, 12));
+      setRelatedMovies((result.items || []).filter((m: Movie) => m.slug !== data.slug).slice(0, 12));
     } catch {}
   };
 
