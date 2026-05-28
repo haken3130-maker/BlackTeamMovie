@@ -8,40 +8,32 @@ interface MovieCardProps {
 }
 
 export default function MovieCard({ movie }: MovieCardProps) {
-  const [isVisible, setIsVisible] = useState(false);
   const [loaded, setLoaded] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  const [error, setError] = useState(false);
 
-  useEffect(() => {
-    const obs = new IntersectionObserver(
-      ([e]) => { if (e.isIntersecting) { setIsVisible(true); obs.disconnect(); } },
-      { rootMargin: '300px' }
-    );
-    if (ref.current) obs.observe(ref.current);
-    return () => obs.disconnect();
-  }, []);
-
-  const fmt = (v: number) => {
-    if (!v) return '';
-    if (v >= 1e6) return (v / 1e6).toFixed(1) + 'M';
-    if (v >= 1e3) return (v / 1e3).toFixed(0) + 'K';
-    return '' + v;
-  };
+  const imgSrc = movie.thumb_url || movie.poster_url;
 
   return (
     <Link href={`/phim/${movie.slug}`} className="block w-full h-full no-underline text-inherit group">
-      <div ref={ref} className="relative rounded-xl overflow-hidden bg-[#16213e] h-full flex flex-col transition-transform duration-300 hover:-translate-y-1 hover:shadow-[0_12px_24px_rgba(229,9,20,0.2)]">
+      <div className="relative rounded-xl overflow-hidden bg-[#16213e] h-full flex flex-col transition-transform duration-300 hover:-translate-y-1 hover:shadow-[0_12px_24px_rgba(229,9,20,0.2)]">
         <div className="relative w-full pt-[150%] flex-shrink-0 overflow-hidden">
-          <img
-            src={movie.thumb_url || movie.poster_url}
-            alt={movie.name}
-            loading="lazy"
-            onLoad={() => setLoaded(true)}
-            className="absolute inset-0 w-full h-full object-cover transition-all duration-300 group-hover:scale-105"
-            style={{ maxWidth: 'none' }}
-          />
-          {!loaded && (
+          {!error && (
+            <img
+              src={imgSrc}
+              alt={movie.name}
+              onLoad={() => setLoaded(true)}
+              onError={() => setError(true)}
+              className={`absolute inset-0 w-full h-full object-cover transition-all duration-300 group-hover:scale-105 ${loaded ? 'opacity-100' : 'opacity-0'}`}
+              style={{ maxWidth: 'none', maxHeight: 'none' }}
+            />
+          )}
+          {!loaded && !error && (
             <div className="absolute inset-0 skeleton rounded-none" />
+          )}
+          {error && (
+            <div className="absolute inset-0 flex items-center justify-center bg-[#0d0d1a]">
+              <svg className="w-8 h-8 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15.75 10.5l4.72-4.72a.75.75 0 011.28.53v11.38a.75.75 0 01-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 002.25-2.25v-9a2.25 2.25 0 00-2.25-2.25h-9A2.25 2.25 0 002.25 7.5v9a2.25 2.25 0 002.25 2.25z" /></svg>
+            </div>
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent z-[1]" />
           <div className="absolute top-2 left-2 right-2 flex justify-between gap-1 z-[2]">
@@ -69,4 +61,11 @@ export default function MovieCard({ movie }: MovieCardProps) {
       </div>
     </Link>
   );
+}
+
+function fmt(v: number) {
+  if (!v) return '';
+  if (v >= 1e6) return (v / 1e6).toFixed(1) + 'M';
+  if (v >= 1e3) return (v / 1e3).toFixed(0) + 'K';
+  return '' + v;
 }
