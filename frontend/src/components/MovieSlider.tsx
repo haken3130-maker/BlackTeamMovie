@@ -1,13 +1,8 @@
 import { useRef } from 'react';
 import Link from 'next/link';
-import { Swiper, SwiperSlide } from 'swiper/react';
-import { Navigation, FreeMode } from 'swiper/modules';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import MovieCard from './MovieCard';
 import { Movie } from '@/types/movie';
-import 'swiper/css';
-import 'swiper/css/navigation';
-import 'swiper/css/free-mode';
 
 interface MovieSliderProps {
   title: string;
@@ -18,100 +13,71 @@ interface MovieSliderProps {
 
 function SkeletonCard() {
   return (
-    <div>
-      <div className="skeleton" style={{ width: '100%', aspectRatio: '2/3', borderRadius: 10 }} />
-      <div style={{ padding: '10px 4px' }}>
-        <div className="skeleton" style={{ height: 16, width: '80%', marginBottom: 6 }} />
-        <div className="skeleton" style={{ height: 12, width: '50%' }} />
+    <div className="w-[140px] sm:w-[160px] md:w-[180px] flex-shrink-0">
+      <div className="rounded-xl overflow-hidden bg-[#16213e]">
+        <div className="pt-[150%] relative">
+          <div className="absolute inset-0 skeleton rounded-none" />
+        </div>
+        <div className="px-2 py-2.5 space-y-2">
+          <div className="skeleton h-4 w-4/5" />
+          <div className="skeleton h-3 w-1/2" />
+        </div>
       </div>
     </div>
   );
 }
 
 export default function MovieSlider({ title, movies, loading, link }: MovieSliderProps) {
-  const prevRef = useRef<HTMLButtonElement>(null);
-  const nextRef = useRef<HTMLButtonElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const scroll = (dir: number) => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollBy({ left: dir * 320, behavior: 'smooth' });
+    }
+  };
 
   return (
     <section>
-      <div className="section-header container" style={{ marginBottom: 16 }}>
-        <h2 className="section-title" style={{ marginBottom: 0 }}>{title}</h2>
+      <div className="flex items-center justify-between mb-4 px-5">
+        <h2 className="text-xl sm:text-2xl font-bold border-l-4 border-[#e50914] pl-3">{title}</h2>
         {link && (
-          <Link href={link} className="see-all">
+          <Link href={link} className="text-[#e50914] text-sm font-semibold hover:opacity-80 transition-opacity">
             Xem tất cả →
           </Link>
         )}
       </div>
 
-      {loading ? (
-        <div className="container">
-          <div style={{ display: 'flex', gap: 14, overflow: 'hidden' }}>
-            {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} style={{ minWidth: 180, flex: 1 }}>
-                <SkeletonCard />
+      <div className="relative group">
+        {!loading && (
+          <>
+            <button onClick={() => scroll(-1)} className="absolute left-1 top-1/2 -translate-y-1/2 z-10 bg-black/60 hover:bg-black/80 text-white w-9 h-9 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              <ChevronLeft size={20} />
+            </button>
+            <button onClick={() => scroll(1)} className="absolute right-1 top-1/2 -translate-y-1/2 z-10 bg-black/60 hover:bg-black/80 text-white w-9 h-9 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              <ChevronRight size={20} />
+            </button>
+          </>
+        )}
+
+        <div
+          ref={scrollRef}
+          className="flex gap-2 sm:gap-3 overflow-x-auto px-5 pb-2 scroll-smooth snap-x snap-mandatory scrollbar-hide"
+          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+        >
+          {loading ? (
+            Array.from({ length: 8 }).map((_, i) => <SkeletonCard key={i} />)
+          ) : (
+            movies.map((m) => (
+              <div key={m._id} className="w-[140px] sm:w-[160px] md:w-[180px] flex-shrink-0 snap-start">
+                <MovieCard movie={m} />
               </div>
-            ))}
-          </div>
+            ))
+          )}
         </div>
-      ) : (
-        <div className="movie-slider" style={{ position: 'relative' }}>
-          <button ref={prevRef} style={{
-            position: 'absolute', left: 8, top: '45%', zIndex: 10,
-            background: 'rgba(0,0,0,0.6)', border: 'none', color: 'white',
-            width: 36, height: 36, borderRadius: '50%', cursor: 'pointer',
-            display: 'none', alignItems: 'center', justifyContent: 'center',
-          }} className="slider-nav slider-prev">
-            <ChevronLeft size={20} />
-          </button>
-
-          <Swiper
-            modules={[Navigation, FreeMode]}
-            navigation={{
-              prevEl: prevRef.current,
-              nextEl: nextRef.current,
-            }}
-            onInit={(swiper) => {
-              if (swiper.params.navigation && typeof swiper.params.navigation === 'object') {
-                swiper.params.navigation.prevEl = prevRef.current;
-                swiper.params.navigation.nextEl = nextRef.current;
-              }
-              swiper.navigation.init();
-              swiper.navigation.update();
-            }}
-            freeMode={true}
-            slidesPerView="auto"
-            spaceBetween={14}
-            style={{ padding: '0 20px' }}
-            breakpoints={{
-              320: { slidesPerView: 2.5, spaceBetween: 10 },
-              480: { slidesPerView: 3, spaceBetween: 12 },
-              768: { slidesPerView: 4.5, spaceBetween: 14 },
-              1024: { slidesPerView: 6, spaceBetween: 14 },
-              1280: { slidesPerView: 7, spaceBetween: 14 },
-            }}
-          >
-            {movies.map((movie) => (
-              <SwiperSlide key={movie._id} style={{ width: 180 }}>
-                <MovieCard movie={movie} />
-              </SwiperSlide>
-            ))}
-          </Swiper>
-
-          <button ref={nextRef} style={{
-            position: 'absolute', right: 8, top: '45%', zIndex: 10,
-            background: 'rgba(0,0,0,0.6)', border: 'none', color: 'white',
-            width: 36, height: 36, borderRadius: '50%', cursor: 'pointer',
-            display: 'none', alignItems: 'center', justifyContent: 'center',
-          }} className="slider-nav slider-next">
-            <ChevronRight size={20} />
-          </button>
-        </div>
-      )}
+      </div>
 
       <style jsx>{`
-        .movie-slider:hover .slider-nav {
-          display: flex !important;
-        }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
       `}</style>
     </section>
   );

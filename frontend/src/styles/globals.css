@@ -1,3 +1,12 @@
+@import "tailwindcss";
+
+@theme {
+  --color-accent: #e50914;
+  --color-bg-primary: #111111;
+  --color-bg-secondary: #1a1a2e;
+  --color-bg-card: #16213e;
+}
+
 :root {
   --bg-primary: #111111;
   --bg-secondary: #1a1a2e;
