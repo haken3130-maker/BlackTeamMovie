@@ -31,18 +31,17 @@ export default function MovieCard({ movie }: MovieCardProps) {
   return (
     <Link href={`/phim/${movie.slug}`} className="block w-full h-full no-underline text-inherit group">
       <div ref={ref} className="relative rounded-xl overflow-hidden bg-[#16213e] h-full flex flex-col transition-transform duration-300 hover:-translate-y-1 hover:shadow-[0_12px_24px_rgba(229,9,20,0.2)]">
-        <div className="relative w-full pt-[150%] bg-[#1a1a2e] flex-shrink-0 overflow-hidden">
+        <div className="relative w-full pt-[150%] flex-shrink-0 overflow-hidden">
+          <img
+            src={movie.thumb_url || movie.poster_url}
+            alt={movie.name}
+            loading="lazy"
+            onLoad={() => setLoaded(true)}
+            className="absolute inset-0 w-full h-full object-cover transition-all duration-300 group-hover:scale-105"
+            style={{ maxWidth: 'none' }}
+          />
           {!loaded && (
             <div className="absolute inset-0 skeleton rounded-none" />
-          )}
-          {(isVisible || loaded) && (
-            <img
-              src={movie.thumb_url || movie.poster_url}
-              alt={movie.name}
-              loading="lazy"
-              onLoad={() => setLoaded(true)}
-              className={`absolute inset-0 w-full h-full object-cover transition-all duration-300 group-hover:scale-105 ${loaded ? 'opacity-100' : 'opacity-0'}`}
-            />
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent z-[1]" />
           <div className="absolute top-2 left-2 right-2 flex justify-between gap-1 z-[2]">
