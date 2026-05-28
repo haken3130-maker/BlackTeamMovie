@@ -57,7 +57,7 @@ export default function MovieListPage() {
         country: country || undefined,
         sort_field: sortField || undefined,
         page,
-        limit: 24,
+        limit: 48,
       });
       setMovies(data.items || []);
       setPagination(data.pagination || null);

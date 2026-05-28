@@ -1,5 +1,6 @@
 import { Movie, MovieDetail, PaginatedResponse, Category } from '@/types/movie';
 
+const CACHE_BASE = typeof window !== 'undefined' ? `http://${location.hostname}:3002` : 'http://localhost:3002';
 const OPHIM_BASE = 'https://ophim1.com';
 const CDN_URL = 'https://img.ophim.live/uploads/movies/';
 
@@ -37,30 +38,30 @@ async function fetchAPI<T>(url: string): Promise<T> {
 
 export const moviesApi = {
   getFeatured: () =>
-    fetchAPI<{ status: boolean; data: { items: any[] } }>(`${OPHIM_BASE}/v1/api/danh-sach?sort_field=view&limit=8`)
-      .then(res => (res.data?.items || []).map(normalizeMovie)),
+    fetchAPI<{ status: boolean; items: any[]; pagination: any }>(`${CACHE_BASE}/api/movies/list?page=1&limit=12&sort_field=modified`)
+      .then(res => (res.items || []).map(normalizeMovie)),
 
   getSeries: (page = 1) =>
-    fetchAPI<{ status: boolean; data: { items: any[]; pagination: any } }>(`${OPHIM_BASE}/v1/api/danh-sach?type=series&page=${page}`)
-      .then(res => ({ status: true, items: (res.data?.items || []).map(normalizeMovie), pagination: res.data?.pagination })),
+    fetchAPI<{ status: boolean; items: any[]; pagination: any }>(`${CACHE_BASE}/api/movies/list?type=series&page=${page}`)
+      .then(res => ({ status: true, items: (res.items || []).map(normalizeMovie), pagination: res.pagination })),
 
   getSingles: (page = 1) =>
-    fetchAPI<{ status: boolean; data: { items: any[]; pagination: any } }>(`${OPHIM_BASE}/v1/api/danh-sach?type=single&page=${page}`)
-      .then(res => ({ status: true, items: (res.data?.items || []).map(normalizeMovie), pagination: res.data?.pagination })),
+    fetchAPI<{ status: boolean; items: any[]; pagination: any }>(`${CACHE_BASE}/api/movies/list?type=single&page=${page}`)
+      .then(res => ({ status: true, items: (res.items || []).map(normalizeMovie), pagination: res.pagination })),
 
   getByCategory: (slug: string, page = 1) =>
-    fetchAPI<{ status: boolean; data: { items: any[]; pagination: any } }>(`${OPHIM_BASE}/v1/api/danh-sach?category=${slug}&page=${page}`)
-      .then(res => ({ status: true, items: (res.data?.items || []).map(normalizeMovie), pagination: res.data?.pagination })),
+    fetchAPI<{ status: boolean; items: any[]; pagination: any }>(`${CACHE_BASE}/api/movies/list?category=${slug}&page=${page}`)
+      .then(res => ({ status: true, items: (res.items || []).map(normalizeMovie), pagination: res.pagination })),
 
   getByCountry: (slug: string, page = 1) =>
-    fetchAPI<{ status: boolean; data: { items: any[]; pagination: any } }>(`${OPHIM_BASE}/v1/api/danh-sach?country=${slug}&page=${page}`)
-      .then(res => ({ status: true, items: (res.data?.items || []).map(normalizeMovie), pagination: res.data?.pagination })),
+    fetchAPI<{ status: boolean; items: any[]; pagination: any }>(`${CACHE_BASE}/api/movies/list?country=${slug}&page=${page}`)
+      .then(res => ({ status: true, items: (res.items || []).map(normalizeMovie), pagination: res.pagination })),
 
   getByType: (type: string, category?: string, page = 1) => {
-    let url = `${OPHIM_BASE}/v1/api/danh-sach?type=${type}&page=${page}`;
+    let url = `${CACHE_BASE}/api/movies/list?type=${type}&page=${page}`;
     if (category) url += `&category=${category}`;
-    return fetchAPI<{ status: boolean; data: { items: any[]; pagination: any } }>(url)
-      .then(res => ({ status: true, items: (res.data?.items || []).map(normalizeMovie), pagination: res.data?.pagination }));
+    return fetchAPI<{ status: boolean; items: any[]; pagination: any }>(url)
+      .then(res => ({ status: true, items: (res.items || []).map(normalizeMovie), pagination: res.pagination }));
   },
 
   search: (keyword: string, page = 1) =>
@@ -72,15 +73,16 @@ export const moviesApi = {
       .filter(([_, v]) => v !== undefined)
       .map(([k, v]) => `${k}=${v}`)
       .join('&');
-    return fetchAPI<{ status: boolean; data: { items: any[]; pagination: any } }>(`${OPHIM_BASE}/v1/api/danh-sach?${query}`)
-      .then(res => ({ status: true, items: (res.data?.items || []).map(normalizeMovie), pagination: res.data?.pagination }));
+    return fetchAPI<{ status: boolean; items: any[]; pagination: any }>(`${CACHE_BASE}/api/movies/list?${query}`)
+      .then(res => ({ status: true, items: (res.items || []).map(normalizeMovie), pagination: res.pagination }));
   },
 
   getDetail: (slug: string) =>
-    fetchAPI<{ movie: any; episodes: any[] }>(`${OPHIM_BASE}/phim/${slug}`)
+    fetchAPI<any>(`${CACHE_BASE}/api/movies/detail/${slug}`)
       .then((res) => {
-        const movie = res.movie;
-        const episodes = (res.episodes || []).map((s: any) => ({
+        const movie = res.status ? res : null;
+        if (!movie) throw new Error('Movie not found in cache');
+        const episodes = (movie.episodes || []).map((s: any) => ({
           server_name: s.server_name,
           server_data: (s.server_data || []).map((ep: any) => ({
             name: ep.name,
@@ -101,10 +103,10 @@ export const moviesApi = {
 
 export const categoriesApi = {
   getAll: () =>
-    fetchAPI<{ status: boolean; data: { items: any[] } }>(`${OPHIM_BASE}/v1/api/the-loai`)
+    fetchAPI<{ status: boolean; data: { items: any[] } }>(`${CACHE_BASE}/api/categories`)
       .then(res => (res.data?.items || []).map((c: any) => ({ _id: c._id, name: c.name, slug: c.slug }))),
 
   getCountries: () =>
-    fetchAPI<{ status: boolean; data: { items: any[] } }>(`${OPHIM_BASE}/v1/api/quoc-gia`)
+    fetchAPI<{ status: boolean; data: { items: any[] } }>(`${CACHE_BASE}/api/countries`)
       .then(res => (res.data?.items || []).map((c: any) => ({ _id: c._id, name: c.name, slug: c.slug }))),
 };

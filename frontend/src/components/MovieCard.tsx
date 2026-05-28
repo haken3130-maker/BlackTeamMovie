@@ -34,10 +34,11 @@ export default function MovieCard({ movie }: MovieCardProps) {
   };
 
   return (
-    <Link href={`/phim/${movie.slug}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+    <Link href={`/phim/${movie.slug}`} style={{ textDecoration: 'none', color: 'inherit', display: 'block', height: '100%' }}>
       <div ref={ref} style={{
         position: 'relative', borderRadius: 10, overflow: 'hidden',
         transition: 'transform 0.3s, box-shadow 0.3s', cursor: 'pointer',
+        height: '100%', display: 'flex', flexDirection: 'column',
       }}
         onMouseEnter={(e) => {
           e.currentTarget.style.transform = 'translateY(-4px)';
@@ -50,7 +51,7 @@ export default function MovieCard({ movie }: MovieCardProps) {
       >
         <div style={{
           position: 'relative', width: '100%',
-          aspectRatio: '2/3', overflow: 'hidden',
+          aspectRatio: '2/3', overflow: 'hidden', flexShrink: 0,
           background: '#1a1a2e',
         }}>
           {!imgLoaded && (
@@ -110,7 +111,8 @@ export default function MovieCard({ movie }: MovieCardProps) {
         </div>
 
         <div style={{
-          padding: '10px 4px',
+          padding: '10px 4px', flex: 1, display: 'flex', flexDirection: 'column',
+          justifyContent: 'space-between', minHeight: 56,
         }}>
           <div style={{
             fontSize: 14, fontWeight: 600, marginBottom: 4,

@@ -79,6 +79,27 @@ section {
   grid-template-columns: repeat(2, 1fr);
 }
 
+.movie-grid > a {
+  height: 100%;
+}
+
+.movie-grid > a > div {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.movie-grid > a > div > div:first-child {
+  flex-shrink: 0;
+}
+
+.movie-grid > a > div > div:last-child {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
 @media (min-width: 481px) {
   .movie-grid {
     grid-template-columns: repeat(3, 1fr);

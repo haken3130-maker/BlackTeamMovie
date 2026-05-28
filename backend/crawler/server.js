@@ -25,18 +25,25 @@ function getMovieSlugs() {
 }
 
 app.get('/api/movies/list', (req, res) => {
-  const { type, category, country, page = '1', limit = '24' } = req.query;
+  const { type, category, country, sort_field, page = '1', limit = '24' } = req.query;
   const slugs = getMovieSlugs();
   if (!slugs.length) return res.json({ status: true, items: [], pagination: null });
   const pageNum = parseInt(page);
   const limitNum = parseInt(limit);
   const start = (pageNum - 1) * limitNum;
 
-  // Filter & paginate
   let movies = slugs.map(s => readJSON(`movie_${s}`)).filter(Boolean);
   if (type) movies = movies.filter(m => m.type === type);
   if (category) movies = movies.filter(m => m.category?.some(c => c.slug === category));
   if (country) movies = movies.filter(m => m.country?.some(c => c.slug === country));
+
+  if (sort_field === 'view') {
+    movies.sort((a, b) => (b.view || 0) - (a.view || 0));
+  } else if (sort_field === 'year') {
+    movies.sort((a, b) => (b.year || 0) - (a.year || 0));
+  } else {
+    movies.sort((a, b) => new Date(b.modified || 0) - new Date(a.modified || 0));
+  }
 
   const total = movies.length;
   const items = movies.slice(start, start + limitNum);

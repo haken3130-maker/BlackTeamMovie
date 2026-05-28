@@ -24,8 +24,8 @@ export default function HomePage() {
       try {
         const [featuredData, seriesData, singlesData] = await Promise.all([
           moviesApi.getFeatured(),
-          moviesApi.getSeries(1),
-          moviesApi.getSingles(1),
+          moviesApi.getList({ type: 'series', page: 1, limit: 48 }),
+          moviesApi.getList({ type: 'single', page: 1, limit: 48 }),
         ]);
         setFeatured(featuredData);
         setSeries(seriesData.items || []);
@@ -58,7 +58,7 @@ export default function HomePage() {
     try {
       const data = slug
         ? await moviesApi.getByType('series', slug, page)
-        : await moviesApi.getSeries(page);
+        : await moviesApi.getList({ type: 'series', page, limit: 48 });
       setSeries(data.items || []);
       setSeriesAll(data);
     } catch {}
